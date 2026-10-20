@@ -94,6 +94,7 @@ If the user asks to schedule a task, use the schedule tool to schedule the task.
             this.setState({
               results: [...old, { topic, score, at: new Date().toISOString() }]
             });
+            await this.save();
             return `Saved ${topic}: ${score}/10`;
           }
         }),
