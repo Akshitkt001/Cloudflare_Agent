@@ -1,6 +1,6 @@
 import { createWorkersAI } from "workers-ai-provider";
 import { callable, routeAgentRequest, type Schedule } from "agents";
-import { getSchedulePrompt, scheduleSchema } from "agents/schedule";
+import { scheduleSchema } from "agents/schedule";
 import { AIChatAgent, type OnChatMessageOptions } from "@cloudflare/ai-chat";
 import { convertToModelMessages, pruneMessages, stepCountIs, streamText, tool } from "ai";
 import { z } from "zod";
@@ -49,17 +49,21 @@ export class ChatAgent extends AIChatAgent<Env, CoachState> {
     const mcpTools = this.mcp.getAITools();
     const workersai = createWorkersAI({ binding: this.env.AI });
 
+    // Clean historical messages array to drop background tool retry chains instantly
+    const rawMessages = await convertToModelMessages(this.messages);
+    const safeMessages = rawMessages.slice(-2);
+
     const result = streamText({
       model: workersai("@cf/meta/llama-3.1-8b-instruct-fp8"),
       system: `You are a friendly but rigorous interview coach for Python backend and AI/ML roles. 
 Strict Rules:
-1. Ask ONE technical question at a time. Do NOT talk about scheduling or tasks.
+1. Ask ONE technical question at a time. Do NOT talk about scheduling or dates.
 2. After the user answers your question, give a score out of 10 and a short note on what was good and what was missing.
-3. Then call the recordResult tool immediately using real tool blocks.
-4. ONLY call the scheduleTask tool if the user explicitly types commands like "remind me" or "schedule". Never call it during regular interview questions.
+3. Then call the recordResult tool immediately using real tool execution blocks.
+4. ONLY call the scheduleTask tool if the user explicitly types strings like "remind me" or "schedule". Never call it during regular interview chats.
 Keep replies short and encouraging.`,
       messages: pruneMessages({
-        messages: await convertToModelMessages(this.messages),
+        messages: safeMessages,
         toolCalls: "before-last-2-messages",
         reasoning: "before-last-message"
       }),
