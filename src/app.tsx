@@ -699,13 +699,13 @@ function Chat() {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-3xl mx-auto px-5 py-6 space-y-5">
-                            <div style={{ padding: 16, margin: 12, border: "2px solid #888", borderRadius: 8, backgroundColor: "var(--kumo-base, #fff)" }}>
-            <b style={{ display: "block", marginBottom: 8, fontSize: "14px" }}>📊 Your Interview Progress</b>
-            {progress.results.length === 0 && <div style={{ color: "#666", fontSize: "13px" }}>No scored topics yet. Answer a question to populate!</div>}
-            {progress.results.slice(-8).map((r, i) => (
-              <div key={i} style={{ fontSize: "13px", margin: "4px 0" }}>🔹 {r.topic}: <strong style={{ color: "green" }}>{r.score}/10</strong></div>
-            ))}
-          </div>
+                  <div style={{ padding: 16, margin: 12, border: "2px solid #888", borderRadius: 8, backgroundColor: "var(--kumo-base, #fff)" }}>
+  <b style={{ display: "block", marginBottom: 8, fontSize: "14px" }}>📊 Your Interview Progress</b>
+  {progress.results.length === 0 && <div style={{ color: "#666", fontSize: "13px" }}>No scored topics yet. Answer a question to populate!</div>}
+  {progress.results.slice(-8).map((r, i) => (
+    <div key={i} style={{ fontSize: "13px", marginY: 2 }}>🔹 {r.topic}: <strong style={{ color: "green" }}>{r.score}/10</strong></div>
+  ))}
+</div>
           {messages.length === 0 && (
             <Empty
               icon={<ChatCircleDotsIcon size={32} />}
