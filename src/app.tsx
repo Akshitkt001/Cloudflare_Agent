@@ -2,6 +2,7 @@ import { Suspense, useCallback, useState, useEffect, useRef } from "react";
 import { useAgent } from "agents/react";
 import { useAgentChat } from "@cloudflare/ai-chat/react";
 import { getToolName, isToolUIPart, type UIMessage } from "ai";
+import type { CoachState } from "./server";
 import type { MCPServersState } from "agents";
 import type { ChatAgent } from "./server";
 import {
@@ -280,11 +281,12 @@ function Chat() {
   const [mcpUrl, setMcpUrl] = useState("");
   const [isAddingServer, setIsAddingServer] = useState(false);
   const mcpPanelRef = useRef<HTMLDivElement>(null);
-
+  const [progress, setProgress] = useState<CoachState>({ results: [] });
   const agent = useAgent<ChatAgent>({
     agent: "ChatAgent",
     onOpen: useCallback(() => setConnected(true), []),
     onClose: useCallback(() => setConnected(false), []),
+    onStateUpdate: (s: CoachState) => setProgress(s), 
     onError: useCallback(
       (error: Event) => console.error("WebSocket error:", error),
       []
@@ -697,6 +699,13 @@ function Chat() {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-3xl mx-auto px-5 py-6 space-y-5">
+                    <div style={{ padding: 12, margin: 12, border: "1px solid #888", borderRadius: 8 }}>
+            <b>Your progress</b>
+            {progress.results.length === 0 && <div>No scores yet.</div>}
+            {progress.results.slice(-8).map((r, i) => (
+              <div key={i}>{r.topic}: {r.score}/10</div>
+            ))}
+          </div>
           {messages.length === 0 && (
             <Empty
               icon={<ChatCircleDotsIcon size={32} />}
