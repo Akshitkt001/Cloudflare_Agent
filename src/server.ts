@@ -92,19 +92,24 @@ If the user asks to schedule a task, use the schedule tool to schedule the task.
             const numericScore = typeof score === "string" ? parseInt(score, 10) : score;
             const parsedScore = isNaN(numericScore) ? 0 : numericScore;
 
-            // Fetch the existing array safely
-            const currentResults = this.state?.results ?? [];
-            const updatedResults = [...currentResults, { topic, score: parsedScore, at: new Date().toISOString() }];
 
-            // CRITICAL FIX: Pass the complete structured object state shape to the worker context
-            this.setState({
+            const agentInstance = this;
+            const currentResults = agentInstance.state?.results || [];
+            
+            const updatedResults = [
+              ...currentResults, 
+              { topic, score: parsedScore, at: new Date().toISOString() }
+            ];
+
+            agentInstance.setState({
               results: updatedResults
             });
             
-            await this.save(); 
+            await agentInstance.save(); 
             return `Saved ${topic}: ${parsedScore}/10`;
           }
         }),
+
 
         getProgress: tool({
           description: "Get saved scores grouped by topic to find weak areas",
