@@ -34,6 +34,10 @@
     {
       "tag": "v4",
       "new_sqlite_classes": []
+    },
+    {
+      "tag": "v5",
+      "new_sqlite_classes": [] 
     }
   ]
 }

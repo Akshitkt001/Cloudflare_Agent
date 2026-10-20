@@ -82,23 +82,20 @@ If the user asks to schedule a task, use the schedule tool to schedule the task.
         ...mcpTools,
 
         // Server-side tool: runs automatically on the server
-       recordResult: tool({
+        recordResult: tool({
           description: "Save the score for an interview topic after grading",
           inputSchema: z.object({
             topic: z.string().describe("short topic, e.g. database indexing"),
-            score: z.union([z.number(), z.string()]).describe("score out of 10")
+            score: z.number().describe("Provide a raw integer score from 0 to 10")
           }),
           execute: async ({ topic, score }) => {
-            const numericScore = typeof score === "string" ? parseInt(score, 10) : score;
-            const parsedScore = isNaN(numericScore) ? 0 : numericScore;
-
-
+            // Safe execution context mapping binding profiles cleanly
             const agentInstance = this;
             const currentResults = agentInstance.state?.results || [];
             
             const updatedResults = [
               ...currentResults, 
-              { topic, score: parsedScore, at: new Date().toISOString() }
+              { topic, score: Math.round(score), at: new Date().toISOString() }
             ];
 
             agentInstance.setState({
@@ -106,7 +103,7 @@ If the user asks to schedule a task, use the schedule tool to schedule the task.
             });
             
             await agentInstance.save(); 
-            return `Saved ${topic}: ${parsedScore}/10`;
+            return `Saved ${topic}: ${score}/10`;
           }
         }),
 
