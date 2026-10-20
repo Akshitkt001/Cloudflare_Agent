@@ -227,28 +227,6 @@ If the user asks to schedule a task, use the schedule tool to schedule the task.
     });
 
     const response = result.toUIMessageStreamResponse();
-    const decoder = new TextDecoder();
-    const encoder = new TextEncoder();
-    let lastSeenText = "";
-
-    const transformStream = new TransformStream({
-      async transform(chunk, controller) {
-        const text = decoder.decode(chunk);
-        let cleanText = text.replace(/\b(\w+)\s+\1\b/g, "$1");
-
-        if (cleanText === lastSeenText && cleanText.trim().length > 0) {
-          return;
-        }
-
-        lastSeenText = cleanText;
-        controller.enqueue(encoder.encode(cleanText));
-      }
-    });
-
-    return new Response(response.body?.pipeThrough(transformStream), {
-      headers: response.headers,
-      status: response.status
-    });
   }
 
   async executeTask(description: string, _task: Schedule<string>) {
