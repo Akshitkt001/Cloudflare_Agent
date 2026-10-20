@@ -19,7 +19,6 @@ export class ChatAgent extends AIChatAgent<Env, CoachState> {
   waitForMcpConnections = true;
 
   onStart() {
-    // Configure OAuth popup behavior for MCP servers that require authentication
     this.mcp.configureOAuthCallback({
       customHandler: (result) => {
         if (result.authSuccess) {
@@ -58,16 +57,13 @@ Strict Rules:
 2. After the user answers your question, give a score out of 10 and a short note on what was good and what was missing.
 3. Then call the recordResult tool immediately using real tool blocks.
 4. ONLY call the scheduleTask tool if the user explicitly types commands like "remind me" or "schedule". Never call it during regular interview questions.
-Keep replies short and encouraging.
-
-${getSchedulePrompt({ date: new Date(new Date().toISOString()) })}`,
+Keep replies short and encouraging.`,
       messages: pruneMessages({
         messages: await convertToModelMessages(this.messages),
         toolCalls: "before-last-2-messages",
         reasoning: "before-last-message"
       }),
       tools: {
-        // Dynamic MCP tools from connected servers
         ...mcpTools,
 
         recordResult: tool({
@@ -77,18 +73,17 @@ ${getSchedulePrompt({ date: new Date(new Date().toISOString()) })}`,
             score: z.number().describe("Provide a raw integer score from 0 to 10")
           }),
           execute: async ({ topic, score }) => {
-            const agentInstance = this;
-            const currentResults = agentInstance.state?.results || [];
+            const currentResults = this.state?.results || [];
             const updatedResults = [
               ...currentResults, 
               { topic, score: Math.round(score), at: new Date().toISOString() }
             ];
 
-            agentInstance.setState({
+            this.setState({
               results: updatedResults
             });
             
-            await agentInstance.save(); 
+            await this.save(); 
             return `Saved ${topic}: ${score}/10`;
           }
         }),
@@ -110,7 +105,6 @@ ${getSchedulePrompt({ date: new Date(new Date().toISOString()) })}`,
           }
         }),
 
-        // Restored Math Tool
         calculate: tool({
           description: "Perform a math calculation with two numbers. Requires user approval for large numbers.",
           inputSchema: z.object({
@@ -137,7 +131,6 @@ ${getSchedulePrompt({ date: new Date(new Date().toISOString()) })}`,
           }
         }),
 
-        // Restored Scheduling Tool
         scheduleTask: tool({
           description: "Schedule an interview reminder to be executed at a later time.",
           inputSchema: scheduleSchema,
