@@ -62,7 +62,7 @@ initialState: CoachState = { results: [] };
 backend and AI/ML roles. Rules:
 1. Ask ONE question at a time.
 2. After the user answers, give a score out of 10 and a short note on what was good and what was missing. Ensure you pass the score parameter as a strict raw number/integer, never a text string.
-3. Then call the recordResult tool with the topic and score.
+3. Then call the recordResult tool immediately using real tool execution schema blocks. Do not type out tool block text formats like {"name": ...} in your response text window under any circumstances.
 4. When asked about progress, call getProgress and point out
 the weak topics.
 5. If the user wants a reminder, use the scheduling tool.
@@ -86,15 +86,20 @@ If the user asks to schedule a task, use the schedule tool to schedule the task.
           description: "Save the score for an interview topic after grading",
           inputSchema: z.object({
             topic: z.string().describe("short topic, e.g. database indexing"),
-            score: z.number().min(0).max(10)
+            score: z.union([z.number(), z.string()]).describe("score out of 10")
           }),
           execute: async ({ topic, score }) => {
+            // Explicitly force type casting to a number even if string received
+            const numericScore = typeof score === "string" ? parseInt(score, 10) : score;
+            const parsedScore = isNaN(numericScore) ? 0 : numericScore;
+
             const old = this.state?.results ?? [];
             this.setState({
-              results: [...old, { topic, score, at: new Date().toISOString() }]
+              results: [...old, { topic, score: parsedScore, at: new Date().toISOString() }]
             });
-            await this.save();
-            return `Saved ${topic}: ${score}/10`;
+            
+            await this.save(); 
+            return `Saved ${topic}: ${parsedScore}/10`;
           }
         }),
 
