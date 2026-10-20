@@ -15,7 +15,7 @@ export type Result = { topic: string; score: number; at: string };
 export type CoachState = { results: Result[] };
 
 export class ChatAgent extends AIChatAgent<Env, CoachState> {
-initialState: CoachState = { results: [] };
+  initialState: CoachState = { results: [] };
   maxPersistedMessages = 100;
   chatRecovery = true;
   // Wait for MCP connections to be re-established after hibernation before
@@ -82,31 +82,18 @@ If the user asks to schedule a task, use the schedule tool to schedule the task.
         ...mcpTools,
 
         // Server-side tool: runs automatically on the server
-       recordResult: tool({
+        recordResult: tool({
           description: "Save the score for an interview topic after grading",
           inputSchema: z.object({
             topic: z.string().describe("short topic, e.g. database indexing"),
-            score: z.union([z.number(), z.string()]).describe("score out of 10")
+            score: z.number().min(0).max(10)
           }),
           execute: async ({ topic, score }) => {
-            const numericScore = typeof score === "string" ? parseInt(score, 10) : score;
-            const parsedScore = isNaN(numericScore) ? 0 : numericScore;
-
-
-            const agentInstance = this;
-            const currentResults = agentInstance.state?.results || [];
-            
-            const updatedResults = [
-              ...currentResults, 
-              { topic, score: parsedScore, at: new Date().toISOString() }
-            ];
-
-            agentInstance.setState({
-              results: updatedResults
+            const old = this.state?.results ?? [];
+            this.setState({
+              results: [...old, { topic, score, at: new Date().toISOString() }]
             });
-            
-            await agentInstance.save(); 
-            return `Saved ${topic}: ${parsedScore}/10`;
+            return `Saved ${topic}: ${score}/10`;
           }
         }),
 
@@ -115,15 +102,9 @@ If the user asks to schedule a task, use the schedule tool to schedule the task.
           description: "Get saved scores grouped by topic to find weak areas",
           inputSchema: z.object({}),
           execute: async () => {
-            const currentResults = this.state?.results ?? [];
             const by: Record<string, number[]> = {};
-            
-            for (const r of currentResults) {
-              if (r && r.topic) {
-                (by[r.topic] ??= []).push(r.score);
-              }
-            }
-            
+            for (const r of this.state?.results ?? [])
+              (by[r.topic] ??= []).push(r.score);
             return Object.entries(by).map(([topic, s]) => ({
               topic,
               attempts: s.length,
@@ -131,7 +112,6 @@ If the user asks to schedule a task, use the schedule tool to schedule the task.
             }));
           }
         }),
-
         // Server-side tool: runs automatically on the server
         getWeather: tool({
           description: "Get the current weather for a city",
@@ -255,11 +235,11 @@ If the user asks to schedule a task, use the schedule tool to schedule the task.
       async transform(chunk, controller) {
         const text = decoder.decode(chunk);
         let cleanText = text.replace(/\b(\w+)\s+\1\b/g, "$1");
-        
+
         if (cleanText === lastSeenText && cleanText.trim().length > 0) {
-          return; 
+          return;
         }
-        
+
         lastSeenText = cleanText;
         controller.enqueue(encoder.encode(cleanText));
       }
