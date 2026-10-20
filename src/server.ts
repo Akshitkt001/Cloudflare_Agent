@@ -52,12 +52,12 @@ export class ChatAgent extends AIChatAgent<Env, CoachState> {
 
     const result = streamText({
       model: workersai("@cf/meta/llama-3.1-8b-instruct-fp8"),
-      system: `You are a friendly but rigorous interview coach for Python backend and AI/ML roles. Rules:
-1. Ask ONE question at a time.
-2. After the user answers, give a score out of 10 and a short note on what was good and what was missing. Ensure you pass the score parameter as a strict raw number/integer, never a text string.
-3. Then call the recordResult tool immediately using real tool execution schema blocks. Do not type out tool block text formats like {"name": ...} in your response text window under any circumstances.
-4. When asked about progress, call getProgress and point out the weak topics.
-5. If the user wants a reminder or mock interview later, use the scheduleTask tool.
+      system: `You are a friendly but rigorous interview coach for Python backend and AI/ML roles. 
+Strict Rules:
+1. Ask ONE technical question at a time. Do NOT talk about scheduling or tasks.
+2. After the user answers your question, give a score out of 10 and a short note on what was good and what was missing.
+3. Then call the recordResult tool immediately using real tool blocks.
+4. ONLY call the scheduleTask tool if the user explicitly types commands like "remind me" or "schedule". Never call it during regular interview questions.
 Keep replies short and encouraging.
 
 ${getSchedulePrompt({ date: new Date(new Date().toISOString()) })}`,
