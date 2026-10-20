@@ -4,6 +4,9 @@
   "main": "src/server.ts",
   "compatibility_date": "2026-06-11",
   "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": false
+  },
   "ai": { "binding": "AI", "remote": true },
   "assets": {
     "directory": "./dist/client",
@@ -40,4 +43,5 @@
       "new_sqlite_classes": [] 
     }
   ]
+  
 }
