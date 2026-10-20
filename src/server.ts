@@ -82,18 +82,31 @@ If the user asks to schedule a task, use the schedule tool to schedule the task.
         ...mcpTools,
 
         // Server-side tool: runs automatically on the server
-        recordResult: tool({
+       recordResult: tool({
           description: "Save the score for an interview topic after grading",
           inputSchema: z.object({
             topic: z.string().describe("short topic, e.g. database indexing"),
-            score: z.number().min(0).max(10)
+            score: z.union([z.number(), z.string()]).describe("score out of 10")
           }),
           execute: async ({ topic, score }) => {
-            const old = this.state?.results ?? [];
-            this.setState({
-              results: [...old, { topic, score, at: new Date().toISOString() }]
+            const numericScore = typeof score === "string" ? parseInt(score, 10) : score;
+            const parsedScore = isNaN(numericScore) ? 0 : numericScore;
+
+
+            const agentInstance = this;
+            const currentResults = agentInstance.state?.results || [];
+            
+            const updatedResults = [
+              ...currentResults, 
+              { topic, score: parsedScore, at: new Date().toISOString() }
+            ];
+
+            agentInstance.setState({
+              results: updatedResults
             });
-            return `Saved ${topic}: ${score}/10`;
+            
+            await agentInstance.save(); 
+            return `Saved ${topic}: ${parsedScore}/10`;
           }
         }),
 
@@ -102,9 +115,15 @@ If the user asks to schedule a task, use the schedule tool to schedule the task.
           description: "Get saved scores grouped by topic to find weak areas",
           inputSchema: z.object({}),
           execute: async () => {
+            const currentResults = this.state?.results ?? [];
             const by: Record<string, number[]> = {};
-            for (const r of this.state?.results ?? [])
-              (by[r.topic] ??= []).push(r.score);
+            
+            for (const r of currentResults) {
+              if (r && r.topic) {
+                (by[r.topic] ??= []).push(r.score);
+              }
+            }
+            
             return Object.entries(by).map(([topic, s]) => ({
               topic,
               attempts: s.length,
