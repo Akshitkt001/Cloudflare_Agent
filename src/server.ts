@@ -60,7 +60,7 @@ export class ChatAgent extends AIChatAgent<Env, CoachState> {
 5. If the user wants a reminder or mock interview later, use the scheduleTask tool.
 Keep replies short and encouraging.
 
-${getSchedulePrompt({ date: new Date() })}`,
+${getSchedulePrompt({ date: new Date(new Date().toISOString()) })}`,
       messages: pruneMessages({
         messages: await convertToModelMessages(this.messages),
         toolCalls: "before-last-2-messages",
