@@ -82,7 +82,7 @@ If the user asks to schedule a task, use the schedule tool to schedule the task.
         ...mcpTools,
 
         // Server-side tool: runs automatically on the server
-        recordResult: tool({
+       recordResult: tool({
           description: "Save the score for an interview topic after grading",
           inputSchema: z.object({
             topic: z.string().describe("short topic, e.g. database indexing"),
