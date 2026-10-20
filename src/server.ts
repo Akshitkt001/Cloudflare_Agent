@@ -55,7 +55,7 @@ export class ChatAgent extends AIChatAgent<Env, CoachState> {
     const workersai = createWorkersAI({ binding: this.env.AI });
 
     const result = streamText({
-      model: workersai("@cf/meta/llama-3.3-70b-instruct-fp8-fast", {
+      model: workersai("@cf/meta/llama-3.3-70b-instruct", {
         sessionAffinity: this.sessionAffinity
       }),
       system: `You are a friendly but rigorous interview coach for Python
