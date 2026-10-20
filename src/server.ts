@@ -235,7 +235,7 @@ If the user asks to schedule a task, use the schedule tool to schedule the task.
     const transformStream = new TransformStream({
       async transform(chunk, controller) {
         const text = decoder.decode(chunk);
-        let cleanText = text.replace(/\b(\w+)\s+\1\b/g, "\$1");
+        let cleanText = text.replace(/\b(\w+)\s+\1\b/g, "$1");
         
         if (cleanText === lastSeenText && cleanText.trim().length > 0) {
           return; 
