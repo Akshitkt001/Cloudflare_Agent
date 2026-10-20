@@ -89,13 +89,16 @@ If the user asks to schedule a task, use the schedule tool to schedule the task.
             score: z.union([z.number(), z.string()]).describe("score out of 10")
           }),
           execute: async ({ topic, score }) => {
-            // Explicitly force type casting to a number even if string received
             const numericScore = typeof score === "string" ? parseInt(score, 10) : score;
             const parsedScore = isNaN(numericScore) ? 0 : numericScore;
 
-            const old = this.state?.results ?? [];
+            // Fetch the existing array safely
+            const currentResults = this.state?.results ?? [];
+            const updatedResults = [...currentResults, { topic, score: parsedScore, at: new Date().toISOString() }];
+
+            // CRITICAL FIX: Pass the complete structured object state shape to the worker context
             this.setState({
-              results: [...old, { topic, score: parsedScore, at: new Date().toISOString() }]
+              results: updatedResults
             });
             
             await this.save(); 
@@ -107,9 +110,15 @@ If the user asks to schedule a task, use the schedule tool to schedule the task.
           description: "Get saved scores grouped by topic to find weak areas",
           inputSchema: z.object({}),
           execute: async () => {
+            const currentResults = this.state?.results ?? [];
             const by: Record<string, number[]> = {};
-            for (const r of this.state?.results ?? [])
-              (by[r.topic] ??= []).push(r.score);
+            
+            for (const r of currentResults) {
+              if (r && r.topic) {
+                (by[r.topic] ??= []).push(r.score);
+              }
+            }
+            
             return Object.entries(by).map(([topic, s]) => ({
               topic,
               attempts: s.length,
