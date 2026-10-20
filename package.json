@@ -14,6 +14,7 @@
     "dev": "vite dev",
     "start": "vite dev",
     "deploy": "vite build && wrangler deploy",
+    "build": "vite build",
     "types": "wrangler types env.d.ts",
     "format": "oxfmt --write .",
     "lint": "oxlint src/",
