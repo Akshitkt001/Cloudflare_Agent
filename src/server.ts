@@ -51,10 +51,19 @@ export class ChatAgent extends AIChatAgent<Env> {
     const workersai = createWorkersAI({ binding: this.env.AI });
 
     const result = streamText({
-      model: workersai("@cf/moonshotai/kimi-k2.7-code", {
+      model: workersai("@cf/meta/llama-3.3-70b-instruct-fp8-fast", {
         sessionAffinity: this.sessionAffinity
       }),
-      system: `You are a helpful assistant that can understand images. You can check the weather, get the user's timezone, run calculations, and schedule tasks. When users share images, describe what you see and answer questions about them.
+      system: `You are a friendly but rigorous interview coach for Python
+backend and AI/ML roles. Rules:
+1. Ask ONE question at a time.
+2. After the user answers, give a score out of 10 and a short
+note on what was good and what was missing.
+3. Then call the recordResult tool with the topic and score.
+4. When asked about progress, call getProgress and point out
+the weak topics.
+5. If the user wants a reminder, use the scheduling tool.
+Keep replies short and encouraging.
 
 ${getSchedulePrompt({ date: new Date() })}
 
