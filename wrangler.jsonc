@@ -21,7 +21,11 @@
   "migrations": [
     {
       "new_sqlite_classes": ["ChatAgent"],
-      "tag": "v2"
+      "tag": "v1"
+    },
+    {
+      "tag": "v2",
+      "new_sqlite_classes": []
     }
   ]
 }
