@@ -11,7 +11,11 @@ import {
 } from "ai";
 import { z } from "zod";
 
-export class ChatAgent extends AIChatAgent<Env> {
+export type Result = { topic: string; score: number; at: string };
+export type CoachState = { results: Result[] };
+
+export class ChatAgent extends AIChatAgent<Env, CoachState> {
+initialState: CoachState = { results: [] };
   maxPersistedMessages = 100;
   chatRecovery = true;
   // Wait for MCP connections to be re-established after hibernation before
@@ -77,6 +81,37 @@ If the user asks to schedule a task, use the schedule tool to schedule the task.
       tools: {
         // MCP tools from connected servers
         ...mcpTools,
+
+        // Server-side tool: runs automatically on the server
+        recordResult: tool({
+          description: "Save the score for an interview topic after grading",
+          inputSchema: z.object({
+            topic: z.string().describe("short topic, e.g. database indexing"),
+            score: z.number().min(0).max(10)
+          }),
+          execute: async ({ topic, score }) => {
+            const old = this.state?.results ?? [];
+            this.setState({
+              results: [...old, { topic, score, at: new Date().toISOString() }]
+            });
+            return `Saved ${topic}: ${score}/10`;
+          }
+        }),
+
+        getProgress: tool({
+          description: "Get saved scores grouped by topic to find weak areas",
+          inputSchema: z.object({}),
+          execute: async () => {
+            const by: Record<string, number[]> = {};
+            for (const r of this.state?.results ?? [])
+              (by[r.topic] ??= []).push(r.score);
+            return Object.entries(by).map(([topic, s]) => ({
+              topic,
+              attempts: s.length,
+              average: Math.round((s.reduce((a, b) => a + b, 0) / s.length) * 10) / 10
+            }));
+          }
+        }),
 
         // Server-side tool: runs automatically on the server
         getWeather: tool({
